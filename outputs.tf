@@ -38,7 +38,7 @@ output "https_listener_arns" {
   value       = aws_lb_listener.frontend_https.*.arn
 }
 
-output "https_listener_ids" {
+/* output "https_listener_ids" {
   description = "The IDs of the load balancer listeners created."
   value       = aws_lb_listener.frontend_https.*.id
 }
@@ -57,3 +57,4 @@ output "target_group_names" {
   description = "Name of the target group. Useful for passing to your CodeDeploy Deployment Group."
   value       = aws_lb_target_group.main.*.name
 }
+ */

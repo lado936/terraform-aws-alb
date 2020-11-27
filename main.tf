@@ -1,3 +1,8 @@
+data "aws_lb_target_group" "this" {
+  for_each ={for s in var.module_target_group_names : s => s } 
+  name = each.key
+}
+
 resource "aws_lb" "this" {
   count = var.create_lb ? 1 : 0
 
@@ -51,64 +56,64 @@ resource "aws_lb" "this" {
   }
 }
 
-resource "aws_lb_target_group" "main" {
-  count = var.create_lb ? length(var.target_groups) : 0
-
-  name        = lookup(var.target_groups[count.index], "name", null)
-  name_prefix = lookup(var.target_groups[count.index], "name_prefix", null)
-
-  vpc_id      = var.vpc_id
-  port        = lookup(var.target_groups[count.index], "backend_port", null)
-  protocol    = lookup(var.target_groups[count.index], "backend_protocol", null) != null ? upper(lookup(var.target_groups[count.index], "backend_protocol")) : null
-  target_type = lookup(var.target_groups[count.index], "target_type", null)
-
-  deregistration_delay               = lookup(var.target_groups[count.index], "deregistration_delay", null)
-  slow_start                         = lookup(var.target_groups[count.index], "slow_start", null)
-  proxy_protocol_v2                  = lookup(var.target_groups[count.index], "proxy_protocol_v2", false)
-  lambda_multi_value_headers_enabled = lookup(var.target_groups[count.index], "lambda_multi_value_headers_enabled", false)
-  load_balancing_algorithm_type      = lookup(var.target_groups[count.index], "load_balancing_algorithm_type", null)
-
-  dynamic "health_check" {
-    for_each = length(keys(lookup(var.target_groups[count.index], "health_check", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "health_check", {})]
-
-    content {
-      enabled             = lookup(health_check.value, "enabled", null)
-      interval            = lookup(health_check.value, "interval", null)
-      path                = lookup(health_check.value, "path", null)
-      port                = lookup(health_check.value, "port", null)
-      healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
-      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
-      timeout             = lookup(health_check.value, "timeout", null)
-      protocol            = lookup(health_check.value, "protocol", null)
-      matcher             = lookup(health_check.value, "matcher", null)
-    }
-  }
-
-  dynamic "stickiness" {
-    for_each = length(keys(lookup(var.target_groups[count.index], "stickiness", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "stickiness", {})]
-
-    content {
-      enabled         = lookup(stickiness.value, "enabled", null)
-      cookie_duration = lookup(stickiness.value, "cookie_duration", null)
-      type            = lookup(stickiness.value, "type", null)
-    }
-  }
-
-  tags = merge(
-    var.tags,
-    var.target_group_tags,
-    lookup(var.target_groups[count.index], "tags", {}),
-    {
-      "Name" = lookup(var.target_groups[count.index], "name", lookup(var.target_groups[count.index], "name_prefix", ""))
-    },
-  )
-
-  depends_on = [aws_lb.this]
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+#resource "aws_lb_target_group" "main" {
+#  count = var.create_lb ? length(var.target_groups) : 0
+#
+#  name        = lookup(var.target_groups[count.index], "name", null)
+#  name_prefix = lookup(var.target_groups[count.index], "name_prefix", null)
+#
+#  vpc_id      = var.vpc_id
+#  port        = lookup(var.target_groups[count.index], "backend_port", null)
+#  protocol    = lookup(var.target_groups[count.index], "backend_protocol", null) != null ? upper(lookup(var.target_groups[count.index], "backend_protocol")) : null
+#  target_type = lookup(var.target_groups[count.index], "target_type", null)
+#
+#  deregistration_delay               = lookup(var.target_groups[count.index], "deregistration_delay", null)
+#  slow_start                         = lookup(var.target_groups[count.index], "slow_start", null)
+#  proxy_protocol_v2                  = lookup(var.target_groups[count.index], "proxy_protocol_v2", false)
+#  lambda_multi_value_headers_enabled = lookup(var.target_groups[count.index], "lambda_multi_value_headers_enabled", false)
+#  load_balancing_algorithm_type      = lookup(var.target_groups[count.index], "load_balancing_algorithm_type", null)
+#
+#  dynamic "health_check" {
+#    for_each = length(keys(lookup(var.target_groups[count.index], "health_check", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "health_check", {})]
+#
+#    content {
+#      enabled             = lookup(health_check.value, "enabled", null)
+#      interval            = lookup(health_check.value, "interval", null)
+#      path                = lookup(health_check.value, "path", null)
+#      port                = lookup(health_check.value, "port", null)
+#      healthy_threshold   = lookup(health_check.value, "healthy_threshold", null)
+#      unhealthy_threshold = lookup(health_check.value, "unhealthy_threshold", null)
+#      timeout             = lookup(health_check.value, "timeout", null)
+#      protocol            = lookup(health_check.value, "protocol", null)
+#      matcher             = lookup(health_check.value, "matcher", null)
+#    }
+#  }
+#
+#  dynamic "stickiness" {
+#    for_each = length(keys(lookup(var.target_groups[count.index], "stickiness", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "stickiness", {})]
+#
+#    content {
+#      enabled         = lookup(stickiness.value, "enabled", null)
+#      cookie_duration = lookup(stickiness.value, "cookie_duration", null)
+#      type            = lookup(stickiness.value, "type", null)
+#    }
+#  }
+#
+#  tags = merge(
+#    var.tags,
+#    var.target_group_tags,
+#    lookup(var.target_groups[count.index], "tags", {}),
+#    {
+#      "Name" = lookup(var.target_groups[count.index], "name", lookup(var.target_groups[count.index], "name_prefix", ""))
+#    },
+#  )
+#
+#  depends_on = [aws_lb.this]
+#
+#  lifecycle {
+#    create_before_destroy = true
+#  }
+#}
 
 resource "aws_lb_listener_rule" "https_listener_rule" {
   count = var.create_lb ? length(var.https_listener_rules) : 0
@@ -215,7 +220,7 @@ resource "aws_lb_listener_rule" "https_listener_rule" {
 
     content {
       type             = action.value["type"]
-      target_group_arn = aws_lb_target_group.main[lookup(action.value, "target_group_index", count.index)].id
+      target_group_arn = data.aws_lb_target_group.this[default_action.value.target_group_name].arn
     }
   }
 
@@ -335,7 +340,7 @@ resource "aws_lb_listener" "frontend_http_tcp" {
     # Defaults to forward action if action_type not specified
     content {
       type             = lookup(default_action.value, "action_type", "forward")
-      target_group_arn = contains([null, "", "forward"], lookup(default_action.value, "action_type", "")) ? aws_lb_target_group.main[lookup(default_action.value, "target_group_index", count.index)].id : null
+      target_group_arn = contains([null, "", "forward"], lookup(default_action.value, "action_type", "")) ? data.aws_lb_target_group.this[default_action.value.target_group_name].arn : null
 
       dynamic "redirect" {
         for_each = length(keys(lookup(default_action.value, "redirect", {}))) == 0 ? [] : [lookup(default_action.value, "redirect", {})]
@@ -379,7 +384,7 @@ resource "aws_lb_listener" "frontend_https" {
     # Defaults to forward action if action_type not specified
     content {
       type             = lookup(default_action.value, "action_type", "forward")
-      target_group_arn = contains([null, "", "forward"], lookup(default_action.value, "action_type", "")) ? aws_lb_target_group.main[lookup(default_action.value, "target_group_index", count.index)].id : null
+      target_group_arn = contains([null, "", "forward"], lookup(default_action.value, "action_type", "")) ? data.aws_lb_target_group.this[default_action.value.target_group_name].arn : null
 
       dynamic "redirect" {
         for_each = length(keys(lookup(default_action.value, "redirect", {}))) == 0 ? [] : [lookup(default_action.value, "redirect", {})]
@@ -446,7 +451,7 @@ resource "aws_lb_listener" "frontend_https" {
     for_each = contains(["authenticate-oidc", "authenticate-cognito"], lookup(var.https_listeners[count.index], "action_type", {})) ? [var.https_listeners[count.index]] : []
     content {
       type             = "forward"
-      target_group_arn = aws_lb_target_group.main[lookup(default_action.value, "target_group_index", count.index)].id
+      target_group_arn = data.aws_lb_target_group.this[default_action.value.target_group_name].arn
     }
   }
 }

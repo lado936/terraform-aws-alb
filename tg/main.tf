@@ -1,22 +1,20 @@
 resource "aws_lb_target_group" "main" {
-  count = length(var.target_groups) 
-
-  name        = lookup(var.target_groups[count.index], "name", null)
-  name_prefix = lookup(var.target_groups[count.index], "name_prefix", null)
+  name        = lookup(var.target_group, "name", null)
+  name_prefix = lookup(var.target_group, "name_prefix", null)
 
   vpc_id      = data.aws_vpc.default.id
-  port        = lookup(var.target_groups[count.index], "backend_port", null)
-  protocol    = lookup(var.target_groups[count.index], "backend_protocol", null) != null ? upper(lookup(var.target_groups[count.index], "backend_protocol")) : null
-  target_type = lookup(var.target_groups[count.index], "target_type", null)
+  port        = lookup(var.target_group, "backend_port", null)
+  protocol    = lookup(var.target_group, "backend_protocol", null) != null ? upper(lookup(var.target_group, "backend_protocol")) : null
+  target_type = lookup(var.target_group, "target_type", null)
 
-  deregistration_delay               = lookup(var.target_groups[count.index], "deregistration_delay", null)
-  slow_start                         = lookup(var.target_groups[count.index], "slow_start", null)
-  proxy_protocol_v2                  = lookup(var.target_groups[count.index], "proxy_protocol_v2", false)
-  lambda_multi_value_headers_enabled = lookup(var.target_groups[count.index], "lambda_multi_value_headers_enabled", false)
-  load_balancing_algorithm_type      = lookup(var.target_groups[count.index], "load_balancing_algorithm_type", null)
+  deregistration_delay               = lookup(var.target_group, "deregistration_delay", null)
+  slow_start                         = lookup(var.target_group, "slow_start", null)
+  proxy_protocol_v2                  = lookup(var.target_group, "proxy_protocol_v2", false)
+  lambda_multi_value_headers_enabled = lookup(var.target_group, "lambda_multi_value_headers_enabled", false)
+  load_balancing_algorithm_type      = lookup(var.target_group, "load_balancing_algorithm_type", null)
 
   dynamic "health_check" {
-    for_each = length(keys(lookup(var.target_groups[count.index], "health_check", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "health_check", {})]
+    for_each = length(keys(lookup(var.target_group, "health_check", {}))) == 0 ? [] : [lookup(var.target_group, "health_check", {})]
 
     content {
       enabled             = lookup(health_check.value, "enabled", null)
@@ -32,7 +30,7 @@ resource "aws_lb_target_group" "main" {
   }
 
   dynamic "stickiness" {
-    for_each = length(keys(lookup(var.target_groups[count.index], "stickiness", {}))) == 0 ? [] : [lookup(var.target_groups[count.index], "stickiness", {})]
+    for_each = length(keys(lookup(var.target_group, "stickiness", {}))) == 0 ? [] : [lookup(var.target_group, "stickiness", {})]
 
     content {
       enabled         = lookup(stickiness.value, "enabled", null)
@@ -44,9 +42,9 @@ resource "aws_lb_target_group" "main" {
   tags = merge(
     var.tags,
     var.target_group_tags,
-    lookup(var.target_groups[count.index], "tags", {}),
+    lookup(var.target_group, "tags", {}),
     {
-      "Name" = lookup(var.target_groups[count.index], "name", lookup(var.target_groups[count.index], "name_prefix", ""))
+      "Name" = lookup(var.target_group, "name", lookup(var.target_group, "name_prefix", ""))
     },
   )
 
@@ -69,4 +67,17 @@ output "target_group_names" {
 
 data "aws_vpc" "default" {
   id= "vpc-0ba9b1e62cf3650b7"
+}
+
+
+data "aws_instance" "this" {
+  instance_tags = {
+    Name = var.target_instance_name
+  }
+}
+
+resource "aws_alb_target_group_attachment" "this" {
+  target_group_arn = aws_lb_target_group.main.arn
+  target_id        = data.aws_instance.this.id
+  port             = var.targets_traffic_port
 }

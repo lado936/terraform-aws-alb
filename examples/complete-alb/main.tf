@@ -130,13 +130,13 @@ module "alb" {
     #},
   ]
 
-  https_listeners = [
-    {
-      port               = 443
-      protocol           = "HTTPS"
-      certificate_arn    = module.acm.this_acm_certificate_arn
-      target_group_name = "h1"
-    },
+  #https_listeners = [
+  #  {
+  #    port               = 443
+  #    protocol           = "HTTPS"
+  #    certificate_arn    = module.acm.this_acm_certificate_arn
+  #    target_group_name = "h1"
+  #  },
     # Authentication actions only allowed with HTTPS
     #{
     #  port               = 444
@@ -176,7 +176,7 @@ module "alb" {
     #    user_info_endpoint     = "https://${local.domain_name}/user_info"
     #  }
     #},
-  ]
+  #]
 
  # https_listener_rules = [
  #   {
@@ -272,8 +272,7 @@ module "alb" {
  }
 module "tg" {
   source = "../../tg/"
-  target_groups = [
-    {
+  target_group = {
       name          = "h1"
       backend_protocol     = "HTTP"
       backend_port         = 80
@@ -294,13 +293,8 @@ module "tg" {
       tags = {
         InstanceTargetGroupTag = "baz"
       }
-    },
-    {
-      name                        = "l1"
-      target_type                        = "lambda"
-      lambda_multi_value_headers_enabled = true
-    },
-  ]
+    }
+  
 
   tags = {
     Project = "Unknown"
@@ -311,7 +305,12 @@ module "tg" {
   target_group_tags = {
     MyGlobalTargetGroupTag = "bar"
   }
+
+  target_instance_name = "jenkin-windows"
+  targets_traffic_port = "80"
+
 }
+
 
 
 #########################

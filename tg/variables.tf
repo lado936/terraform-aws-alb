@@ -13,10 +13,10 @@ variable "target_group_tags" {
 
 
 
-variable "target_groups" {
+variable "target_group" {
   description = "A list of maps containing key/value pairs that define the target groups to be created. Order of these maps is important and the index of these are to be referenced in listener definitions. Required key/values: name, backend_protocol, backend_port"
   type        = any
-  default     = []
+  default     = {}
 }
 
 #variable "vpc_id" {
@@ -24,3 +24,11 @@ variable "target_groups" {
 #  type        = string
 #  default     = null
 #}
+
+variable "target_instance_name" {
+  
+}
+
+variable "targets_traffic_port" {
+  
+}

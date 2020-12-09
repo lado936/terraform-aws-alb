@@ -71,13 +71,24 @@ data "aws_vpc" "default" {
 
 
 data "aws_instance" "this" {
+  for_each = var.target_instance_names
   instance_tags = {
-    Name = var.target_instance_name
+    Name = each.key
   }
 }
 
+
+
 resource "aws_alb_target_group_attachment" "this" {
-  target_group_arn = aws_lb_target_group.main.arn
-  target_id        = data.aws_instance.this.id
-  port             = var.targets_traffic_port
+for_each = var.target_instance_names
+target_group_arn = data.aws_lb_target_group.this[each.key].arn
+target_id = data.aws_instance.this[each.key].id
+port = var.targets_traffic_port
+}
+
+
+data "aws_lb_target_group" "this" {
+  for_each = var.target_instance_names
+  name = each.value
+  
 }

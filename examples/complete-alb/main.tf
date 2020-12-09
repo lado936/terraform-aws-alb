@@ -306,7 +306,10 @@ module "tg" {
     MyGlobalTargetGroupTag = "bar"
   }
 
-  target_instance_name = "jenkin-windows"
+  target_instance_names = {
+    "YOUR-MACHINE-NAME" = "TARGET-GROUP-TO-ATTACH",
+    "YOUR-MACHINE-NAME" = "TARGET-GROUP-TO-ATTACH"
+  }
   targets_traffic_port = "80"
 
 }

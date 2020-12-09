@@ -25,7 +25,7 @@ variable "target_group" {
 #  default     = null
 #}
 
-variable "target_instance_name" {
+variable "target_instance_names" {
   
 }
 
